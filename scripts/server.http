@@ -5,3 +5,7 @@ Accept: application/json
 ### GET liveness
 GET http://localhost:8080/liveness
 Accept: application/json
+
+### GET customers
+GET http://localhost:8080/customers
+Accept: application/json
