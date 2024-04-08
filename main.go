@@ -1,7 +1,18 @@
 package main
 
-import "fmt"
+import (
+	"github.com/janobono/linked-in-build-a-microservice-with-go/internal/database"
+	"github.com/janobono/linked-in-build-a-microservice-with-go/internal/server"
+	"log"
+)
 
 func main() {
-	fmt.Println("Hello world")
+	db, err := database.NewDatabaseClient()
+	if err != nil {
+		log.Fatalf("failed to initialize Database Client: %s", err)
+	}
+	srv := server.NewEchoServer(db)
+	if err := srv.Start(); err != nil {
+		log.Fatal(err.Error())
+	}
 }
