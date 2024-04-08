@@ -1,0 +1,7 @@
+.idea
+scripts
+.gitignore
+build.sh
+docker-compose.yml
+Dockerfile
+README.md

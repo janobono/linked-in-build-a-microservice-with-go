@@ -1,6 +1,7 @@
 package server
 
 import (
+	"fmt"
 	"log"
 	"net/http"
 
@@ -40,12 +41,14 @@ type Server interface {
 }
 
 type EchoServer struct {
+	port int
 	echo *echo.Echo
 	DB   database.DatabaseClient
 }
 
-func NewEchoServer(db database.DatabaseClient) Server {
+func NewEchoServer(port int, db database.DatabaseClient) Server {
 	server := &EchoServer{
+		port: port,
 		echo: echo.New(),
 		DB:   db,
 	}
@@ -54,7 +57,7 @@ func NewEchoServer(db database.DatabaseClient) Server {
 }
 
 func (s *EchoServer) Start() error {
-	if err := s.echo.Start(":8080"); err != nil && err != http.ErrServerClosed {
+	if err := s.echo.Start(fmt.Sprintf(":%d", s.port)); err != nil && err != http.ErrServerClosed {
 		log.Fatalf("server shutdown occurred: %s", err)
 		return err
 	}
