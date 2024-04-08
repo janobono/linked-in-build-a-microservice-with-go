@@ -3,11 +3,12 @@ package database
 import (
 	"context"
 	"errors"
+
 	"github.com/google/uuid"
 	"github.com/janobono/linked-in-build-a-microservice-with-go/internal/dberrors"
-	"gorm.io/gorm"
-
 	"github.com/janobono/linked-in-build-a-microservice-with-go/internal/models"
+	"gorm.io/gorm"
+	"gorm.io/gorm/clause"
 )
 
 func (c client) GetAllCustomers(ctx context.Context, emailAddress string) ([]models.Customer, error) {
@@ -29,4 +30,46 @@ func (c client) AddCustomer(ctx context.Context, customer *models.Customer) (*mo
 		return nil, result.Error
 	}
 	return customer, nil
+}
+
+func (c client) GetCustomerById(ctx context.Context, ID string) (*models.Customer, error) {
+	customer := &models.Customer{}
+	result := c.DB.WithContext(ctx).
+		Where(&models.Customer{CustomerID: ID}).
+		First(&customer)
+	if result.Error != nil {
+		if errors.Is(result.Error, gorm.ErrRecordNotFound) {
+			return nil, &dberrors.NotFoundError{Entity: "customer", ID: ID}
+		}
+		return nil, result.Error
+	}
+	return customer, nil
+}
+
+func (c client) UpdateCustomer(ctx context.Context, customer *models.Customer) (*models.Customer, error) {
+	var customers []models.Customer
+	result := c.DB.WithContext(ctx).
+		Clauses(clause.Returning{}).
+		Where(&models.Customer{CustomerID: customer.CustomerID}).
+		Updates(models.Customer{
+			FirstName: customer.FirstName,
+			LastName:  customer.LastName,
+			Email:     customer.Email,
+			Phone:     customer.Phone,
+			Address:   customer.Address,
+		})
+	if result.Error != nil {
+		if errors.Is(result.Error, gorm.ErrDuplicatedKey) {
+			return nil, &dberrors.ConflictError{}
+		}
+		return nil, result.Error
+	}
+	if result.RowsAffected == 0 {
+		return nil, &dberrors.NotFoundError{Entity: "customer", ID: customer.CustomerID}
+	}
+	return &customers[0], nil
+}
+
+func (c client) DeleteCustomer(ctx context.Context, ID string) error {
+	return c.DB.WithContext(ctx).Delete(&models.Customer{CustomerID: ID}).Error
 }

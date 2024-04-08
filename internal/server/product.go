@@ -1,10 +1,10 @@
 package server
 
 import (
-	"github.com/janobono/linked-in-build-a-microservice-with-go/internal/dberrors"
-	"github.com/janobono/linked-in-build-a-microservice-with-go/internal/models"
 	"net/http"
 
+	"github.com/janobono/linked-in-build-a-microservice-with-go/internal/dberrors"
+	"github.com/janobono/linked-in-build-a-microservice-with-go/internal/models"
 	"github.com/labstack/echo/v4"
 )
 
@@ -32,4 +32,50 @@ func (s *EchoServer) AddProduct(ctx echo.Context) error {
 		}
 	}
 	return ctx.JSON(http.StatusCreated, product)
+}
+
+func (s *EchoServer) GetProductById(ctx echo.Context) error {
+	ID := ctx.Param("id")
+	product, err := s.DB.GetProductById(ctx.Request().Context(), ID)
+	if err != nil {
+		switch err.(type) {
+		case *dberrors.NotFoundError:
+			return ctx.JSON(http.StatusNotFound, err)
+		default:
+			return ctx.JSON(http.StatusInternalServerError, err)
+		}
+	}
+	return ctx.JSON(http.StatusOK, product)
+}
+
+func (s *EchoServer) UpdateProduct(ctx echo.Context) error {
+	ID := ctx.Param("id")
+	product := new(models.Product)
+	if err := ctx.Bind(product); err != nil {
+		return ctx.JSON(http.StatusUnsupportedMediaType, err)
+	}
+	if ID != product.ProductID {
+		return ctx.JSON(http.StatusBadRequest, "id on path doesn't match id on body")
+	}
+	product, err := s.DB.UpdateProduct(ctx.Request().Context(), product)
+	if err != nil {
+		switch err.(type) {
+		case *dberrors.NotFoundError:
+			return ctx.JSON(http.StatusNotFound, err)
+		case *dberrors.ConflictError:
+			return ctx.JSON(http.StatusConflict, err)
+		default:
+			return ctx.JSON(http.StatusInternalServerError, err)
+		}
+	}
+	return ctx.JSON(http.StatusOK, product)
+}
+
+func (s *EchoServer) DeleteProduct(ctx echo.Context) error {
+	ID := ctx.Param("id")
+	err := s.DB.DeleteProduct(ctx.Request().Context(), ID)
+	if err != nil {
+		return ctx.JSON(http.StatusInternalServerError, err)
+	}
+	return ctx.NoContent(http.StatusResetContent)
 }
