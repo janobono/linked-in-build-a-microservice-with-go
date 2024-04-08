@@ -9,3 +9,15 @@ Accept: application/json
 ### GET customers
 GET http://localhost:8080/customers
 Accept: application/json
+
+### GET products
+GET http://localhost:8080/products
+Accept: application/json
+
+### GET services
+GET http://localhost:8080/services
+Accept: application/json
+
+### GET vendors
+GET http://localhost:8080/vendors
+Accept: application/json
