@@ -1,0 +1,7 @@
+### GET readiness
+GET http://localhost:8080/readiness
+Accept: application/json
+
+### GET liveness
+GET http://localhost:8080/liveness
+Accept: application/json
