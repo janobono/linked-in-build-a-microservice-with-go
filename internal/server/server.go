@@ -56,12 +56,15 @@ func (s *EchoServer) registerRoutes() {
 
 	pg := s.echo.Group("/products")
 	pg.GET("", s.GetAllProducts)
+	pg.POST("", s.AddProduct)
 
 	sg := s.echo.Group("/services")
 	sg.GET("", s.GetAllServices)
+	sg.POST("", s.AddService)
 
 	vg := s.echo.Group("/vendors")
 	vg.GET("", s.GetAllVendors)
+	vg.POST("", s.AddVendor)
 }
 
 func (s *EchoServer) Readiness(ctx echo.Context) error {

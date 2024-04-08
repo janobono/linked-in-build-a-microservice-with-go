@@ -2,7 +2,11 @@ package database
 
 import (
 	"context"
+	"errors"
+	"github.com/google/uuid"
+	"github.com/janobono/linked-in-build-a-microservice-with-go/internal/dberrors"
 	"github.com/janobono/linked-in-build-a-microservice-with-go/internal/models"
+	"gorm.io/gorm"
 )
 
 func (c client) GetAllProducts(ctx context.Context, vendorID string) ([]models.Product, error) {
@@ -11,4 +15,17 @@ func (c client) GetAllProducts(ctx context.Context, vendorID string) ([]models.P
 		Where(models.Product{VendorID: vendorID}).
 		Find(&products)
 	return products, result.Error
+}
+
+func (c client) AddProduct(ctx context.Context, product *models.Product) (*models.Product, error) {
+	product.ProductID = uuid.NewString()
+	result := c.DB.WithContext(ctx).
+		Create(&product)
+	if result.Error != nil {
+		if errors.Is(result.Error, gorm.ErrDuplicatedKey) {
+			return nil, &dberrors.ConflictError{}
+		}
+		return nil, result.Error
+	}
+	return product, nil
 }
